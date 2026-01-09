@@ -26,10 +26,10 @@
             box-sizing: border-box;
             text-align: center;
             position: relative; /* オーバーレイ表示用 */
-            background: #1a1a1a; /* 背景色を少し明るくしてコンテナ感を出す */
+            background: #1a1a1a;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden; /* 角丸からはみ出さないように */
+            overflow: hidden;
         }
 
         h1 {
@@ -133,7 +133,12 @@
             font-family: Arial, sans-serif;
         }
 
-        /* スタートボタン */
+        /* スタートボタンエリア（修正箇所：z-indexを追加） */
+        .controls {
+            position: relative;
+            z-index: 2001; /* オーバーレイ(2000)より手前に表示 */
+        }
+
         .controls button {
             background-color: #ff0055;
             color: #fff;
@@ -172,13 +177,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: none; /* デフォルトは非表示 */
+            background-color: rgba(0, 0, 0, 0.85); /* 少し薄くしてボタンを見やすく */
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 2000;
             backdrop-filter: blur(5px);
+            pointer-events: none; /* オーバーレイ自体はクリックを阻害しないようにする（念のため） */
         }
 
         #result-title {
@@ -192,24 +198,8 @@
         #result-score {
             font-size: 2.5rem;
             color: #fff;
-            margin-bottom: 40px;
-        }
-
-        #btn-retry {
-            background-color: #55ff55;
-            color: #000;
-            border: none;
-            padding: 20px 60px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 50px;
-            box-shadow: 0 0 20px rgba(85, 255, 85, 0.6);
-            transition: transform 0.2s;
-        }
-
-        #btn-retry:hover {
-            transform: scale(1.1);
+            /* ボタンと重ならないようにマージン調整 */
+            margin-bottom: 120px; 
         }
 
         /* エフェクト */
@@ -253,21 +243,20 @@
     </div>
 
     <div id="display-container">
-        </div>
+    </div>
 
     <div id="keyboard-area">
-        </div>
+    </div>
+
+    <div id="result-overlay">
+        <div id="result-title">TIME UP</div>
+        <div id="result-score">SCORE: 0</div>
+    </div>
 
     <div class="controls">
         <button id="btn-start" onclick="startGame()">GAME START</button>
     </div>
     <p class="instruction">単語完成で場がリセット＆キー配列シャッフル</p>
-
-    <div id="result-overlay">
-        <div id="result-title">TIME UP</div>
-        <div id="result-score">SCORE: 0</div>
-        <button id="btn-retry" onclick="startGame()">RETRY</button>
-    </div>
 
     <div class="footer">
         2026 ©kimawira
@@ -350,7 +339,6 @@
             noiseGain.connect(audioCtx.destination);
             noise.start();
         } else if (type === 'end') {
-            // 終了音
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(400, audioCtx.currentTime);
             osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.5);
@@ -423,6 +411,9 @@
         // オーバーレイを非表示
         resultOverlay.style.display = 'none';
         
+        // ボタンの文字を初期化
+        btnStart.innerText = "GAME START";
+
         score = 0;
         timeLeft = 60;
         currentInput = [];
@@ -447,10 +438,14 @@
     function endGame() {
         clearInterval(timerInterval);
         isPlaying = false;
+        
+        // ボタンをRETRYにして再有効化
         btnStart.disabled = false;
+        btnStart.innerText = "RETRY";
+
         playSound('end');
         
-        // オーバーレイを表示
+        // オーバーレイを表示（ただしz-indexによりボタンの下に表示される）
         resultScoreEl.innerText = `SCORE: ${score}`;
         resultOverlay.style.display = 'flex';
     }
